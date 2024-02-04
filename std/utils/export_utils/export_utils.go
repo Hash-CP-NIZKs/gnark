@@ -91,7 +91,7 @@ type AssignmentRaw struct {
 func SerializeAssignment(solution *cs.R1CSSolution, filePath string) error {
 	assignmentRaw := AssignmentRaw{make([]Element, 0, len(solution.W)), 0, 0}
 
-	for _, v := range solution.W {
+	for _, v := range solution.W[1:] { /* omit first element since it is const value 1 */
 		assignmentRaw.Variables = append(assignmentRaw.Variables, Element(v.Bits()))
 	}
 
