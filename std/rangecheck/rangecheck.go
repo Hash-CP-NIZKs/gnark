@@ -10,9 +10,14 @@
 package rangecheck
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/consensys/gnark/constraint/solver"
 	"github.com/consensys/gnark/frontend"
 	"github.com/consensys/gnark/frontend/cs/r1cs"
+	"github.com/consensys/gnark/logger"
+	"github.com/consensys/gnark/std/rangecheck/varuna"
 )
 
 // only for documentation purposes. If we import the package then godoc knows
@@ -24,6 +29,12 @@ var _ = r1cs.NewBuilder
 func New(api frontend.API) frontend.Rangechecker {
 	if rc, ok := api.(frontend.Rangechecker); ok {
 		return rc
+	}
+	disableVaruna := os.Getenv("DISABLE_VARUNA_RANGE_CHECK_METHODS")
+	if disableVaruna != "true" {
+		log := logger.Logger().With().Logger()
+		log.Debug().Msg(fmt.Sprintf("using varuna range checker, since DISABLE_VARUNA_RANGE_CHECK_METHODS=\"%s\"", disableVaruna))
+		return varuna.NewVarunaRangechecker(api)
 	}
 	if _, ok := api.(frontend.Committer); ok {
 		return newCommitRangechecker(api)
