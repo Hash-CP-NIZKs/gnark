@@ -1,6 +1,7 @@
 package export_utils
 
 import (
+	"fmt"
 	"math/big"
 	"os"
 
@@ -25,7 +26,14 @@ type R1CSRaw []ConstraintRaw
 func SerializeR1CS(r1cs constraint.R1CS, filePath string) error {
 	r1csRaw := make(R1CSRaw, 0, r1cs.GetNbConstraints())
 
+	countNonZeroA := 0
+	countNonZeroB := 0
+	countNonZeroC := 0
 	for _, r1c := range r1cs.GetR1Cs() {
+		countNonZeroA += len(r1c.L)
+		countNonZeroB += len(r1c.R)
+		countNonZeroC += len(r1c.O)
+
 		c := ConstraintRaw{make(map[int]Element, len(r1c.L)), make(map[int]Element, len(r1c.R)), make(map[int]Element, len(r1c.O))}
 		for _, term := range r1c.L {
 			e := r1cs.GetCoefficient(int(term.CID))
@@ -65,6 +73,7 @@ func SerializeR1CS(r1cs constraint.R1CS, filePath string) error {
 		}
 		r1csRaw = append(r1csRaw, c)
 	}
+	fmt.Printf("count non-zeros (normal-constrains): %d %d %d\n", countNonZeroA, countNonZeroB, countNonZeroC)
 
 	{
 		fR1CS, _ := os.Create(filePath)
@@ -120,7 +129,13 @@ func SerializeLookup(lookup *varuna.Lookup, r1cs constraint.R1CS, filePath strin
 		lookupRaw.Table = append(lookupRaw.Table, [3]uint32{uint32(i), 0, 0})
 	}
 
+	countNonZeroA := 0
+	countNonZeroB := 0
+	countNonZeroC := 0
+
 	for _, lc := range lookup.A {
+		countNonZeroA += len(lc)
+
 		c := ConstraintRaw{make(map[int]Element, len(lc)), make(map[int]Element, 0), make(map[int]Element, 0)}
 		for _, term := range lc {
 			e := r1cs.GetCoefficient(int(term.CID))
@@ -133,6 +148,7 @@ func SerializeLookup(lookup *varuna.Lookup, r1cs constraint.R1CS, filePath strin
 		// c.C[0] = FrElement{} /* 0 */
 		lookupRaw.Constraints = append(lookupRaw.Constraints, c)
 	}
+	fmt.Printf("count non-zeros (lookup-constrains): %d %d %d\n", countNonZeroA, countNonZeroB, countNonZeroC)
 
 	{
 		fLookup, _ := os.Create(filePath)
