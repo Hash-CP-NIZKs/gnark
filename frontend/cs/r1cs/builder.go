@@ -185,10 +185,10 @@ func (builder *builder) newR1C(l, r, o frontend.Variable) constraint.R1C {
 	// the "r" linear expression is going to end up in the B matrix
 	// the less Variable we have appearing in the B matrix, the more likely groth16.Setup
 	// is going to produce infinity points in pk.G1.B and pk.G2.B, which will speed up proving time
-	if len(L) > len(R) {
+	// if len(L) > len(R) {
 		// TODO @gbotrel shouldn't we do the opposite? Code doesn't match comment.
-		L, R = R, L
-	}
+		// L, R = R, L
+	// }
 
 	return constraint.R1C{L: L, R: R, O: O}
 }
