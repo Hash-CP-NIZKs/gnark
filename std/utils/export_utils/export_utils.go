@@ -90,17 +90,18 @@ func SerializeR1CS(r1cs constraint.R1CS, filePath string) error {
 }
 
 type AssignmentRaw struct {
-	Variables          []Element `json:"variables"`
-	PrimaryInputSize   uint      `json:"primary_input_size"`
-	AuxiliaryInputSize uint      `json:"auxiliary_input_size"`
+	Variables       []Element `json:"variables"`         /* values in the witness, the first element "1" is also included */
+	NumPublicInputs uint      `json:"num_public_inputs"` /* number of public, include the first element "1" */
 }
 
 // TODO: primary_input_size and auxiliary_input_size are actually not used
 
-func SerializeAssignment(solution *cs.R1CSSolution, filePath string) error {
-	assignmentRaw := AssignmentRaw{make([]Element, 0, len(solution.W)), 0, 0}
+func SerializeAssignment(r1cs constraint.R1CS, solution *cs.R1CSSolution, filePath string) error {
+	// see: https://github.com/zproof/gnark/blob/1243f3c4a9a7d30a8f23fa35938d7850aff319aa/constraint/core.go#L327-L341
 
-	for _, v := range solution.W[1:] { /* omit first element since it is const value 1 */
+	assignmentRaw := AssignmentRaw{make([]Element, 0, len(solution.W)), uint(r1cs.GetNbPublicVariables())}
+
+	for _, v := range solution.W {
 		assignmentRaw.Variables = append(assignmentRaw.Variables, Element(v.Bits()))
 	}
 
