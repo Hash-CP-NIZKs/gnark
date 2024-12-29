@@ -1,13 +1,13 @@
 package export_utils
 
 import (
-	"fmt"
 	"math/big"
 	"os"
 
 	"github.com/consensys/gnark-crypto/ecc/bls12-377/fr"
 	"github.com/consensys/gnark/constraint"
 	cs "github.com/consensys/gnark/constraint/bls12-377"
+	"github.com/consensys/gnark/logger"
 	"github.com/consensys/gnark/std/rangecheck/varuna"
 
 	"github.com/fxamacker/cbor/v2"
@@ -24,6 +24,8 @@ type ConstraintRaw struct {
 type R1CSRaw []ConstraintRaw
 
 func SerializeR1CS(r1cs constraint.R1CS, filePath string) error {
+	log := logger.Logger().With().Logger()
+
 	r1csRaw := make(R1CSRaw, 0, r1cs.GetNbConstraints())
 
 	countNonZeroA := 0
@@ -73,7 +75,7 @@ func SerializeR1CS(r1cs constraint.R1CS, filePath string) error {
 		}
 		r1csRaw = append(r1csRaw, c)
 	}
-	fmt.Printf("count non-zeros (normal-constrains): %d %d %d\n", countNonZeroA, countNonZeroB, countNonZeroC)
+	log.Info().Msgf("count non-zeros (normal-constrains): %d %d %d", countNonZeroA, countNonZeroB, countNonZeroC)
 
 	{
 		fR1CS, _ := os.Create(filePath)
@@ -125,6 +127,8 @@ type LookupRaw struct {
 }
 
 func SerializeLookup(lookup *varuna.Lookup, r1cs constraint.R1CS, filePath string) error {
+	log := logger.Logger().With().Logger()
+
 	lookupRaw := LookupRaw{make([][3]uint32, 0, lookup.NbTable), make([]ConstraintRaw, 0, len(lookup.A))}
 	for i := 0; i < lookup.NbTable; i++ {
 		lookupRaw.Table = append(lookupRaw.Table, [3]uint32{uint32(i), 0, 0})
@@ -149,7 +153,7 @@ func SerializeLookup(lookup *varuna.Lookup, r1cs constraint.R1CS, filePath strin
 		// c.C[0] = FrElement{} /* 0 */
 		lookupRaw.Constraints = append(lookupRaw.Constraints, c)
 	}
-	fmt.Printf("count non-zeros (lookup-constrains): %d %d %d\n", countNonZeroA, countNonZeroB, countNonZeroC)
+	log.Info().Msgf("count non-zeros (lookup-constrains): %d %d %d", countNonZeroA, countNonZeroB, countNonZeroC)
 
 	{
 		fLookup, _ := os.Create(filePath)
